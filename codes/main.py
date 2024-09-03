@@ -3,6 +3,9 @@ import tkinter as tk
 from tkinter import filedialog
 import xarray as xr
 import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
+import matplotlib
+matplotlib.use("TkAgg")
 
 
 class NetCDFViewer:
@@ -86,7 +89,7 @@ class NetCDFViewer:
                 profundidade_inicio = self.ds.isel(depth=0)["depth"].values
                 profundidade_fim = self.ds.isel(depth=-1)["depth"].values
                 self.FrameSelecaoProfundidade.grid(row=3, column=0, pady=10)
-                self.LabelProfundidade.config(text=f"Selecionar data entre {profundidade_inicio} - {profundidade_fim}")
+                self.LabelProfundidade.config(text=f"Selecionar profundidade entre {profundidade_inicio} - {profundidade_fim}")
 
             self.plot_button.grid(row=4, column=0, pady=10)
     def plot_variable(self):
@@ -95,23 +98,34 @@ class NetCDFViewer:
             return
 
         var_name = self.variable_var.get()
-        ano = int(self.EntryAno.get())
-        mes = int(self.EntryMes.get())
-        dia = int(self.EntryDia.get())
-        hora = int(self.EntryHora.get())
-        profundidade = int(self.EntryProfundidade.get())
 
         if "time" in self.ds.variables:
+            ano = int(self.EntryAno.get())
+            mes = int(self.EntryMes.get())
+            dia = int(self.EntryDia.get())
+            hora = int(self.EntryHora.get())
+
             data = datetime.datetime(year=ano, month=mes, day=dia, hour=hora)
             self.ds = self.ds.sel(time=data, method="nearest")
         if "depth" in self.ds.variables:
+            profundidade = int(self.EntryProfundidade.get())
+
             self.ds = self.ds.sel(depth=profundidade, method="nearest")
 
-        data = self.ds[var_name]
+        lat = self.ds.lat.values
+        lon = self.ds.lon.values
+        value = self.ds[var_name].values
 
-
-
+        fig = plt.figure(figsize=(10, 6))
+        proj = ccrs.PlateCarree()
+        ax = plt.axes(projection=proj)
+        cf = ax.contourf(lon, lat, value, 60, norm=None, cmap="jet", transform=ccrs.PlateCarree())
+        cb = plt.colorbar(cf, extend='both', shrink=0.675, pad=0.02, orientation='vertical', fraction=0.1)
+        ax.coastlines()
+        plt.title("Mapa")
+        plt.tight_layout()
         plt.show()
+        print("*")
 
 
 if __name__ == "__main__":
