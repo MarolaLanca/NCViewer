@@ -1,11 +1,7 @@
 import datetime
 import tkinter as tk
-<<<<<<< Updated upstream
 from tkinter import filedialog
-=======
-
 import numpy as np
->>>>>>> Stashed changes
 import xarray as xr
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
@@ -132,12 +128,6 @@ class NetCDFViewer:
 
             self.plot_button.grid(row=6, column=0, pady=10)
     def plot_variable(self):
-<<<<<<< Updated upstream
-        lat_name = self.EntryLatConf.get()
-        lon_name = self.EntryLonConf.get()
-        time_name = self.EntryTimeConf.get()
-        depth_name = self.EntryDepthConf.get()
-=======
         self.ds = xr.open_dataset(self.filepath)
 
         coordenadas = {}
@@ -152,28 +142,19 @@ class NetCDFViewer:
             if coords not in list(self.ds.coords):
                 messagebox.showerror("Erro", f"{coords} não está na lista de coordenadas.")
                 return
->>>>>>> Stashed changes
 
         if self.ds is None:
             print("Nenhum arquivo foi carregado.")
             return
 
-
         var_name = self.variable_var.get()
 
         if self.var_entry_time.get():
-<<<<<<< Updated upstream
-            ano = int(self.EntryAno.get())
-            mes = int(self.EntryMes.get())
-            dia = int(self.EntryDia.get())
-            hora = int(self.EntryHora.get())
-=======
             try:
                 ano = int(self.EntryAno.get())
                 mes = int(self.EntryMes.get())
                 dia = int(self.EntryDia.get())
                 hora = int(self.EntryHora.get())
-
             except:
                 messagebox.showerror("Erro", "Não colocado um número na data/hora.")
                 return
@@ -192,10 +173,7 @@ class NetCDFViewer:
             except Exception as e:
                 messagebox.showerror("Erro", f"A data selecionada não existe.{e}")
                 return
->>>>>>> Stashed changes
 
-            data = datetime.datetime(year=ano, month=mes, day=dia, hour=hora)
-            self.ds = self.ds.sel({time_name: data}, method="nearest")
         if self.var_entry_depth.get():
             try:
                 profundidade = int(self.EntryProfundidade.get())
@@ -203,19 +181,16 @@ class NetCDFViewer:
                 messagebox.showerror("Erro", "Não colocado um número na profundidade.")
                 return
 
-<<<<<<< Updated upstream
-            self.ds = self.ds.sel({depth_name: profundidade}, method="nearest")
-=======
+
             depth_min, depth_max = self.extremos_depth(coordenadas["depth_name"])
             if (profundidade < depth_min) or (profundidade > depth_max):
                 messagebox.showerror("Erro", f"A profundidade deve estar entre {depth_min} e {depth_max}")
                 return
             else:
                 self.ds = self.ds.sel({coordenadas["depth_name"]: profundidade}, method="nearest")
->>>>>>> Stashed changes
 
-        lat = self.ds[lat_name].values
-        lon = self.ds[lon_name].values
+        lat = self.ds[coordenadas["lat_name"]].values
+        lon = self.ds[coordenadas["lon_name"]].values
         value = self.ds[var_name].values
 
         fig = plt.figure(figsize=(10, 6))
@@ -266,8 +241,6 @@ class NetCDFViewer:
         time_min = self.ds.isel({time_name: 0})[time_name].values
         time_max = self.ds.isel({time_name: -1})[time_name].values
 
-<<<<<<< Updated upstream
-=======
         return time_min, time_max
 
     def extremos_depth(self, depth_name):
@@ -276,7 +249,7 @@ class NetCDFViewer:
 
         return depth_min, depth_max
 
->>>>>>> Stashed changes
+
 if __name__ == "__main__":
     root = tk.Tk()
     app = NetCDFViewer(root)
