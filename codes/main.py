@@ -5,7 +5,7 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import matplotlib
-matplotlib.use("TkAgg")
+from tkinter import filedialog, messagebox
 
 
 class NetCDFViewer:
@@ -64,6 +64,14 @@ class NetCDFViewer:
         self.EntryProfundidade = tk.Entry(self.FrameSelecaoProfundidade)
         self.EntryProfundidade.grid(row=1, column=0, pady=5)
 
+        # Frame salvar
+        self.FramaSalvar = tk.Frame(root)
+
+        self.var_save = tk.BooleanVar()
+        self.check_save = tk.Checkbutton(self.FramaSalvar, text="Salvar", variable=self.var_save)
+        self.check_save.grid(row=1, column=0, pady=10, padx=10)
+
+        # Plot Button
         self.plot_button = tk.Button(self.root, text="Plotar Variável", command=self.plot_variable)
 
     def open_file(self):
@@ -91,7 +99,9 @@ class NetCDFViewer:
                 self.FrameSelecaoProfundidade.grid(row=3, column=0, pady=10)
                 self.LabelProfundidade.config(text=f"Selecionar profundidade entre {profundidade_inicio} - {profundidade_fim}")
 
-            self.plot_button.grid(row=4, column=0, pady=10)
+            self.FramaSalvar.grid(row=4, column=0, pady=10)
+
+            self.plot_button.grid(row=5, column=0, pady=10)
     def plot_variable(self):
         if self.ds is None:
             print("Nenhum arquivo foi carregado.")
@@ -124,8 +134,15 @@ class NetCDFViewer:
         ax.coastlines()
         plt.title("Mapa")
         plt.tight_layout()
+
+        if self.var_save.get():
+            save_path = filedialog.asksaveasfilename(defaultextension=".png",
+                                                     filetypes=[("PNG files", "*.png"), ("All files", "*.*")])
+            messagebox.showinfo("Salvo", f"Imagem salva em {save_path}")
+            plt.savefig(save_path, dpi=300, transparent=False, bbox_inches='tight')
+
         plt.show()
-        print("*")
+
 
 
 if __name__ == "__main__":
