@@ -1,6 +1,5 @@
 import datetime
 import tkinter as tk
-from tkinter import filedialog
 import xarray as xr
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
@@ -125,34 +124,51 @@ class NetCDFViewer:
             self.FramaSalvar.grid(row=5, column=0, pady=10)
 
             self.plot_button.grid(row=6, column=0, pady=10)
+
     def plot_variable(self):
-        lat_name = self.EntryLatConf.get()
-        lon_name = self.EntryLonConf.get()
-        time_name = self.EntryTimeConf.get()
-        depth_name = self.EntryDepthConf.get()
+        coordenadas = {}
+        coordenadas["lat_name"] = self.EntryLatConf.get()
+        coordenadas["lon_name"] = self.EntryLonConf.get()
+        if self.var_entry_time.get():
+            coordenadas["time_name"] = self.EntryTimeConf.get()
+        if self.var_entry_depth.get():
+            coordenadas["depth_name"] = self.EntryDepthConf.get()
+
+        for coords in coordenadas.values():
+            if coords not in list(self.ds.coords):
+                messagebox.showerror("Erro", f"{coords} não está na lista de coordenadas.")
+                return
 
         if self.ds is None:
             print("Nenhum arquivo foi carregado.")
             return
 
-
         var_name = self.variable_var.get()
 
         if self.var_entry_time.get():
-            ano = int(self.EntryAno.get())
-            mes = int(self.EntryMes.get())
-            dia = int(self.EntryDia.get())
-            hora = int(self.EntryHora.get())
+            try:
+                ano = int(self.EntryAno.get())
+                mes = int(self.EntryMes.get())
+                dia = int(self.EntryDia.get())
+                hora = int(self.EntryHora.get())
+            except:
+                messagebox.showerror("Erro", "Não colocado um número na data/hora.")
+                return
 
-            data = datetime.datetime(year=ano, month=mes, day=dia, hour=hora)
-            self.ds = self.ds.sel({time_name: data}, method="nearest")
+            try:
+                data = datetime.datetime(year=ano, month=mes, day=dia, hour=hora)
+                self.ds = self.ds.sel({coordenadas["time_name"]: data}, method="nearest")
+            except:
+                messagebox.showerror("Erro", "A data selecionada não existe.")
+                return
+
         if self.var_entry_depth.get():
             profundidade = int(self.EntryProfundidade.get())
 
-            self.ds = self.ds.sel({depth_name: profundidade}, method="nearest")
+            self.ds = self.ds.sel({coordenadas["depth_name"]: profundidade}, method="nearest")
 
-        lat = self.ds[lat_name].values
-        lon = self.ds[lon_name].values
+        lat = self.ds[coordenadas["lat_name"]].values
+        lon = self.ds[coordenadas["lon_name"]].values
         value = self.ds[var_name].values
 
         fig = plt.figure(figsize=(10, 6))
@@ -198,6 +214,7 @@ class NetCDFViewer:
         else:  # Se o Checkbutton estiver desmarcado
             self.EntryDepthConf.config(state='disabled')
             self.FrameSelecaoProfundidade.grid_forget()
+
 
 
 if __name__ == "__main__":
