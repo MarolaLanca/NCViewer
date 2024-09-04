@@ -21,23 +21,54 @@ class NetCDFViewer:
         self.FrameSelArquivo.grid(row=0, column=0, pady=10)
 
         self.label = tk.Label(self.FrameSelArquivo, text="Nenhum arquivo selecionado")
-        self.label.grid(row=0, column=0, pady=10)
+        self.label.grid(row=0, column=0, pady=5)
 
         self.select_button = tk.Button(self.FrameSelArquivo, text="Selecionar Arquivo", command=self.open_file)
-        self.select_button.grid(row=1, column=0, pady=10)
+        self.select_button.grid(row=1, column=0, pady=5)
+
+        # Frame configuração
+        self.FrameConfiguracao = tk.Frame(root)
+
+        self.LabelConf = tk.Label(self.FrameConfiguracao, text="")
+        self.LabelConf.grid(row=0, column=0, pady=5, columnspan=4)
+
+        self.LabelLonConf = tk.Label(self.FrameConfiguracao, text="Longitude")
+        self.LabelLonConf.grid(row=1, column=0, pady=5, padx=5)
+        self.EntryLonConf = tk.Entry(self.FrameConfiguracao)
+        self.EntryLonConf.grid(row=2, column = 0, pady=5, padx=5)
+
+        self.LabelLatConf = tk.Label(self.FrameConfiguracao, text="Latitude")
+        self.LabelLatConf.grid(row=1, column=1, pady=5, padx=5)
+        self.EntryLatConf = tk.Entry(self.FrameConfiguracao)
+        self.EntryLatConf.grid(row=2, column=1, pady=5, padx=5)
+
+        self.LabelTimeConf = tk.Label(self.FrameConfiguracao, text="Time")
+        self.LabelTimeConf.grid(row=1, column=2, pady=5, padx=5)
+        self.EntryTimeConf = tk.Entry(self.FrameConfiguracao, state='disabled')
+        self.EntryTimeConf.grid(row=2, column=2, pady=5, padx=5)
+        self.var_entry_time = tk.BooleanVar()
+        self.CheckbuttonTime = tk.Checkbutton(self.FrameConfiguracao, text="Time?", variable=self.var_entry_time,
+                                          command=self.toggle_entry_time)
+        self.CheckbuttonTime.grid(row=3, column=2, pady=3)
+
+        self.LabelDepthConf = tk.Label(self.FrameConfiguracao, text="Depth")
+        self.LabelDepthConf.grid(row=1, column=3, pady=5, padx=5)
+        self.EntryDepthConf = tk.Entry(self.FrameConfiguracao, state="disabled")
+        self.EntryDepthConf.grid(row=2, column=3, pady=5, padx=5)
+        self.var_entry_depth = tk.BooleanVar()
+        self.CheckbuttonDepth = tk.Checkbutton(self.FrameConfiguracao, text="Depth?", variable=self.var_entry_depth,
+                                              command=self.toggle_entry_depth)
+        self.CheckbuttonDepth.grid(row=3, column=3, pady=3)
 
         # Frame seleção variavel
         self.FrameSelVar = tk.Frame(root)
 
         self.variable_var = tk.StringVar(self.FrameSelVar)
         self.variable_selector = tk.OptionMenu(self.FrameSelVar, self.variable_var, "")
-        self.variable_selector.grid(row=0, column=0, pady=10)
+        self.variable_selector.grid(row=0, column=0, pady=5)
 
         # Frame seleção data e hora
         self.FrameDataHora = tk.Frame(root)
-
-        self.LabelTime = tk.Label(self.FrameDataHora, text="Selecione a data e a hora")
-        self.LabelTime.grid(row=0, column=0, pady=10, columnspan=4)
 
         self.LabelAno = tk.Label(self.FrameDataHora, text="Ano")
         self.LabelAno.grid(row=1, column=0, pady=5, padx=5)
@@ -69,7 +100,7 @@ class NetCDFViewer:
 
         self.var_save = tk.BooleanVar()
         self.check_save = tk.Checkbutton(self.FramaSalvar, text="Salvar", variable=self.var_save)
-        self.check_save.grid(row=1, column=0, pady=10, padx=10)
+        self.check_save.grid(row=1, column=0, pady=5, padx=10)
 
         # Plot Button
         self.plot_button = tk.Button(self.root, text="Plotar Variável", command=self.plot_variable)
@@ -86,30 +117,28 @@ class NetCDFViewer:
                 self.variable_selector['menu'].add_command(label=var, command=tk._setit(self.variable_var, var))
             self.variable_var.set(variables[0])  # Define a primeira variável como padrão
 
-            self.FrameSelVar.grid(row=1, column=0, pady=10)
-            if "time" in self.ds.variables:
-                data_inicio = self.ds.isel(time=0)["time"].values
-                data_final = self.ds.isel(time=-1)["time"].values
-                self.FrameDataHora.grid(row=2, column=0, pady=10)
-                self.LabelTime.config(text=f"Selecionar data entre {data_inicio} - {data_final}")
+            self.LabelConf.config(text=self.lista_coordenadas())
+            self.FrameConfiguracao.grid(row=1, column=0, pady=10)
 
-            if "depth" in self.ds.variables:
-                profundidade_inicio = self.ds.isel(depth=0)["depth"].values
-                profundidade_fim = self.ds.isel(depth=-1)["depth"].values
-                self.FrameSelecaoProfundidade.grid(row=3, column=0, pady=10)
-                self.LabelProfundidade.config(text=f"Selecionar profundidade entre {profundidade_inicio} - {profundidade_fim}")
+            self.FrameSelVar.grid(row=2, column=0, pady=10)
 
-            self.FramaSalvar.grid(row=4, column=0, pady=10)
+            self.FramaSalvar.grid(row=5, column=0, pady=10)
 
-            self.plot_button.grid(row=5, column=0, pady=10)
+            self.plot_button.grid(row=6, column=0, pady=10)
     def plot_variable(self):
+        lat_name = self.EntryLatConf.get()
+        lon_name = self.EntryLonConf.get()
+        time_name = self.EntryTimeConf.get()
+        depth_name = self.EntryDepthConf.get()
+
         if self.ds is None:
             print("Nenhum arquivo foi carregado.")
             return
 
+
         var_name = self.variable_var.get()
 
-        if "time" in self.ds.variables:
+        if self.var_entry_time.get():
             ano = int(self.EntryAno.get())
             mes = int(self.EntryMes.get())
             dia = int(self.EntryDia.get())
@@ -117,13 +146,13 @@ class NetCDFViewer:
 
             data = datetime.datetime(year=ano, month=mes, day=dia, hour=hora)
             self.ds = self.ds.sel(time=data, method="nearest")
-        if "depth" in self.ds.variables:
+        if self.var_entry_depth.get():
             profundidade = int(self.EntryProfundidade.get())
 
             self.ds = self.ds.sel(depth=profundidade, method="nearest")
 
-        lat = self.ds.lat.values
-        lon = self.ds.lon.values
+        lat = self.ds[lat_name].values
+        lon = self.ds[lon_name].values
         value = self.ds[var_name].values
 
         fig = plt.figure(figsize=(10, 6))
@@ -143,6 +172,32 @@ class NetCDFViewer:
 
         plt.show()
 
+    def lista_coordenadas(self):
+        coordenadas = list(self.ds.coords)
+
+        string = ""
+        for i in range(len(coordenadas) - 1):
+            string = string + f"{coordenadas[i]}, "
+        string = string + coordenadas[-1]
+
+        message = f"Suas coordenadas são {string}."
+        return message
+
+    def toggle_entry_time(self):
+        if self.var_entry_time.get():  # Se o Checkbutton estiver selecionado
+            self.EntryTimeConf.config(state='normal')
+            self.FrameDataHora.grid(row=2, column=0, pady=10)
+        else:  # Se o Checkbutton estiver desmarcado
+            self.EntryTimeConf.config(state='disabled')
+            self.FrameDataHora.grid_forget()
+
+    def toggle_entry_depth(self):
+        if self.var_entry_depth.get():  # Se o Checkbutton estiver selecionado
+            self.EntryDepthConf.config(state='normal')
+            self.FrameSelecaoProfundidade.grid(row=3, column=0, pady=10)
+        else:  # Se o Checkbutton estiver desmarcado
+            self.EntryDepthConf.config(state='disabled')
+            self.FrameSelecaoProfundidade.grid_forget()
 
 
 if __name__ == "__main__":
