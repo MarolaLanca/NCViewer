@@ -145,11 +145,11 @@ class NetCDFViewer:
             hora = int(self.EntryHora.get())
 
             data = datetime.datetime(year=ano, month=mes, day=dia, hour=hora)
-            self.ds = self.ds.sel(time=data, method="nearest")
+            self.ds = self.ds.sel({time_name: data}, method="nearest")
         if self.var_entry_depth.get():
             profundidade = int(self.EntryProfundidade.get())
 
-            self.ds = self.ds.sel(depth=profundidade, method="nearest")
+            self.ds = self.ds.sel({depth_name: profundidade}, method="nearest")
 
         lat = self.ds[lat_name].values
         lon = self.ds[lon_name].values
